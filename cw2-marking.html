@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coursework 2 Marking</title>
+    <style>
+        * { font-family: Arial, Helvetica, sans-serif; }
+        nav {
+            background-color: black;
+            color: white;
+            position: fixed;
+            padding: 20px;
+            margin: 0px 10px 0px 20px;
+            width: 100%;
+            z-index: 7;
+        }
+        #Grid {padding-top: 50px}
+        #JSONEditorControls { padding: 5px 10px 0px 0px; }
+        .WSTest {
+            border: 2px solid darkgreen;
+            margin: 20px;
+            padding: 10px 10px 10px 10px;
+        }
+        p {
+            margin: 0px;
+            padding: 5px;
+        }
+        #Grid {
+            display: grid;
+            grid-template-columns: auto 400px;
+        }
+        #JSONEditor { padding-top: 20px; }
+    </style>
+
+    <!-- JSON Editor JS and CSS. See: https://www.npmjs.com/package/jsoneditor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/10.4.1/jsoneditor.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/10.4.1/jsoneditor.min.css">
+</head>
+<body>
+    <!-- Fixed nav bar for setting port and student id and running all tests -->
+    <nav>
+        Port: <input type="number" id="PortInput" max="10000" value="8080">
+        Student ID: <input type="text" id="IDInput" value="M0012345">
+        <button onclick="setPortStudentID()">Set</button>
+        <button onclick="runAllTests()">Run all tests</button>
+    </nav>
+
+    <!-- Main Contents -->
+    <div id="Grid">
+        <div id="TestWrapper">
+            <!-- Users -->
+            <div class="WSTest" style="background-color: lightblue;">
+                <p>
+                    <b>Users URL:</b> <a id="UsersPath"></a>
+                </p>
+                <p>
+                    <b>POST</b>: <button onclick="postUsers('user1')">User 1</button> <button
+                        onclick="postUsers('user2')">User
+                        2</button>
+                </p>
+                <p>
+                    <b>GET:</b> <input type="text" id="GETUsersInput" value="q=John"><button
+                        onclick="getUsers()">Submit</button>
+                </p>
+            </div>
+
+            <!-- Login -->
+            <div class="WSTest" style="background-color: lightcoral">
+                <p>
+                    <b>Login URL:</b> <a id="LoginPath"></a>
+                </p>
+                <p>
+                    <b>POST</b>: <button onclick="postLogin('user1')">User 1</button> <button
+                        onclick="postLogin('user2')">User
+                        2</button>
+                </p>
+                <p>
+                    <b>GET:</b> <button onclick="getLogin()">Submit</button>
+                </p>
+                <p>
+                    <b>DELETE:</b> <button onclick="deleteLogin()">Submit</button>
+                </p>
+            </div>
+
+            <!-- Contents -->
+            <div class="WSTest" style="background-color: lightcyan;">
+                <p>
+                    <b>Contents URL:</b> <a id="ContentsPath"></a>
+                </p>
+                <p>
+                    <b>POST</b>: <button onclick="postContents('post1')">Post 1</button> <button
+                        onclick="postContents('post2')">Post 2</button> <button onclick="postContents('post3')">Post
+                        3</button>
+                </p>
+                <p>
+                    <b>GET:</b> <input type="text" id="GETContentsInput" value="q=tigers"><button
+                        onclick="getContents()">Submit</button>
+                </p>
+            </div>
+
+            <!-- Follow -->
+            <div class="WSTest" style="background-color: lightsalmon">
+                <p>
+                    <b>Follow URL:</b> <a id="FollowPath"></a>
+                </p>
+                <p>
+                    <b>POST</b>: <button onclick="postFollow('user1')">Follow User 1</button> <button
+                        onclick="postFollow('user2')">Follow User 2</button>
+                </p>
+                <p>
+                    <b>DELETE:</b> <button onclick="deleteFollow('user1')">Unfollow User 1</button> <button
+                        onclick="deleteFollow('user2')">Unfollow User 2</button>
+                </p>
+            </div>
+
+            <!-- Feed -->
+            <div class="WSTest" style="background-color: lightgreen">
+                <p>
+                    <b>Feed URL:</b> <a id="FeedPath"></a>
+                </p>
+                <p>
+                    <b>GET</b>: <button onclick="getFeed()">Get Feed</button>
+                </p>
+            </div>
+        </div><!-- End of TestWrapper -->
+
+        <!-- JSON Editor -->
+        <div>
+            <div id="JSONEditor"></div>
+            <div id="JSONEditorControls">
+                <button id="SaveJSONButton" onclick="saveJSON()">Save</button>
+                <button id="LoadDefaultJSONButton">Load Defaults</button>
+            </div>
+        </div>
+         
+    </div><!-- End of Grid -->
+
+    <script>
+        //JSON editor
+        let jsonEditor;
+
+        //Data used for tests
+        let data;
+
+        //Save JSON button
+        let saveJSONButton;
+
+        //Local variables
+        let studentID;
+        let port;
+        let basePath;
+
+        //Default data structure
+        const defaultData = {
+            registration: {
+                user1: { name: "Jane Smith", username: "janesmith1", email: "jane@j.com", password: "fffFFF123#"},
+                user2:  { name: "John Smith", username: "johnsmith1", email: "john@j.com", password: "fffFFF123#" }
+            },
+            login: {
+                user1: { name: "Jane Smith", username: "janesmith1", email: "jane@j.com", password: "fffFFF123#"},
+                user2:  { name: "John Smith", username: "johnsmith1", email: "john@j.com", password: "fffFFF123#" }
+            },
+            contents: {
+                post1: { text: "A great blog about a lion." },
+                post2:  { text: "A sad blog about Sarah's pet lion." },
+                post3: { text: "My wonderful blog about my pet jaguar." },
+            },
+            follow: {
+                user1: { username: "janesmith1", email: "jane@j.com" },
+                user2: { username: "johnsmith1", email: "john@j.com" }
+            }
+        }
+
+        //JQuery type shortcut to save typing
+        const $ = query => document.querySelector(query);
+
+        function setPortStudentID() {
+            studentID = $('#IDInput').value;
+            port = $('#PortInput').value;
+            basePath = `http://localhost:${port}/${studentID}`;
+
+            //Users
+            $('#UsersPath').innerHTML = `${basePath}/users`;
+            $('#UsersPath').href = `${basePath}/users`;
+
+            // Login
+            $('#LoginPath').innerHTML = `${basePath}/login`;
+            $('#LoginPath').href = `${basePath}/login`;
+
+            // Contents
+            $('#ContentsPath').innerHTML = `${basePath}/contents`;
+            $('#ContentsPath').href = `${basePath}/contents`;
+
+            // Follow
+            $('#FollowPath').innerHTML = `${basePath}/follow`;
+            $('#FollowPath').href = `${basePath}/follow`;
+
+            // Feed
+            $('#FeedPath').innerHTML = `${basePath}/feed`;
+            $('#FeedPath').href = `${basePath}/feed`;
+        }
+
+        //Registers specified user
+        async function postUsers(user) {
+            console.log('POST ' + $('#UsersPath').href);
+            const response = await fetch($('#UsersPath').href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data.registration[user])
+            });
+            console.log(await response.json());
+        }
+
+        //Searches for user
+        async function getUsers(query) {
+            if(!query)
+                query = $('#GETUsersInput').value;
+            const url = $('#UsersPath').href + "/?" + query;
+            console.log('GET ' + url);
+            const response = await fetch(url);
+            console.log(await response.json());
+        }
+
+        //Logs in specified user
+        async function postLogin(user) {
+            console.log('POST ' + $('#LoginPath').href);
+            const response = await fetch($('#LoginPath').href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data.login[user])
+            });
+            console.log(await response.json());
+        }
+
+        //Returns login status
+        async function getLogin() {
+            console.log('GET ' + $('#LoginPath').href);
+            const response = await fetch($('#LoginPath').href);
+            console.log(await response.json());
+        }
+
+        //Logs out
+        async function deleteLogin() {
+            console.log('DELETE ' + $('#LoginPath').href);
+            const response = await fetch($('#LoginPath').href, {
+                method: 'DELETE'
+            });
+            console.log(await response.json());
+        }
+
+        //Posts specified contents 
+        async function postContents(post) {
+            console.log('POST ' + $('#ContentsPath').href);
+            const response = await fetch($('#ContentsPath').href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data.contents[post])
+            });
+            console.log(await response.json());
+        }
+
+        //Search for contents
+        async function getContents(query) {
+            if(!query)
+                query = $('#GETContentsInput').value;
+            const url = $('#ContentsPath').href + "/?" + query
+            console.log('GET ' + url);
+            const response = await fetch(url);
+            console.log(await response.json());
+        }
+
+        //Follow specified user
+        async function postFollow(user) {
+            console.log('POST ' + $('#FollowPath').href)
+            const response = await fetch($('#FollowPath').href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data.follow[user])
+            });
+            console.log(await response.json());
+        }
+
+        //Unfollows specified user
+        async function deleteFollow(user) {
+            console.log('DELETE ' + $('#FollowPath').href);
+            const response = await fetch($('#FollowPath').href, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data.follow[user])
+            });
+            console.log(await response.json());
+        }
+
+        //Returns the feed
+        async function getFeed() {
+            console.log('GET ' + $('#FeedPath').href);
+            const response = await fetch($('#FeedPath').href);
+            console.log(await response.json());
+        }
+
+        //Listens for changes to editor
+        function editorChanged(json){
+            saveJSONButton.disabled = false;
+        }
+
+        //Copies data in JSON editor to memory and stores in local storage
+        function saveJSON(){
+            data = jsonEditor.get();
+            saveJSONButton.disabled = true;
+
+            //Save in local storage
+            localStorage.testData = JSON.stringify(data);
+        }
+
+        //Runs all tests
+        async function runAllTests(){
+            //Register users
+            await postUsers('user1');
+            await postUsers('user2');
+
+            //Search for users - MIGHT ONLY WORK WITH TEXT INDEX ON USERS
+            await getUsers("q=John");//Should return one user
+            await getUsers("q=Smith");//Should return two users
+
+            //Login test with user1
+            await getLogin();//Should be false
+            await postLogin('user1');
+            await getLogin();//Should be true
+            await deleteLogin();
+            await getLogin();//Should be false
+
+            //Post contents
+            await postLogin('user1');
+            await postContents('post1');
+            await postContents('post2');
+            await postLogin('user2');
+            await postContents('post3');
+
+            //Search for contents
+            await getContents("q=lion");//Should return two contents
+            await getContents("q=blog");//Should return three contents
+
+            //Follow
+            await postLogin('user2');
+            await postFollow('user1');
+
+            //Feed
+            await getFeed();//Should only return posts about lions
+
+            //Unfollow
+            await postLogin('user2');
+            await deleteFollow('user1');
+            await getFeed();//Should not return any posts
+        }
+
+        window.onload = () => {
+            setPortStudentID();
+
+            // Create the editor
+            const container = document.getElementById("JSONEditor");
+            const options = {
+                onChange: editorChanged
+            }
+            jsonEditor = new JSONEditor(container, options);
+
+            //Listen for change events
+            jsonEditor.onChange = editorChanged;
+
+            //Load JSON into editor
+            if(localStorage.testData)
+                data = JSON.parse(localStorage.testData)
+            else
+                data = defaultData;
+            jsonEditor.set(data);
+
+            //Get reference to saveJSON button
+            saveJSONButton = $('#SaveJSONButton');
+            saveJSONButton.disabled = true;
+
+            //Event handler for load default JSON button
+            $('#LoadDefaultJSONButton').onclick = ()=>{
+                jsonEditor.set(defaultData);
+                saveJSONButton.disabled = false;
+            };
+        }
+    </script>
+</body>
+</html>

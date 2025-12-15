@@ -95,7 +95,7 @@
                         3</button>
                 </p>
                 <p>
-                    <b>GET:</b> <input type="text" id="GETContentsInput" value="q=tigers"><button
+                    <b>GET:</b> <input type="text" id="GETContentsInput" value="q=lion"><button
                         onclick="getContents()">Submit</button>
                 </p>
             </div>
@@ -320,10 +320,6 @@
             await postUsers('user1');
             await postUsers('user2');
 
-            //Search for users - MIGHT ONLY WORK WITH TEXT INDEX ON USERS
-            await getUsers("q=John");//Should return one user
-            await getUsers("q=Smith");//Should return two users
-
             //Login test with user1
             await getLogin();//Should be false
             await postLogin('user1');
@@ -338,10 +334,6 @@
             await postLogin('user2');
             await postContents('post3');
 
-            //Search for contents
-            await getContents("q=lion");//Should return two contents
-            await getContents("q=blog");//Should return three contents
-
             //Follow
             await postLogin('user2');
             await postFollow('user1');
@@ -353,6 +345,16 @@
             await postLogin('user2');
             await deleteFollow('user1');
             await getFeed();//Should not return any posts
+            
+            //Search for users
+            //MIGHT ONLY WORK WITH TEXT INDEX ON USERS
+            await getUsers("q=John");//Should return one user
+            await getUsers("q=Smith");//Should return two users
+
+            //Search for contents
+            //MIGHT ONLY WORK WITH TEXT INDEX ON CONTENTS
+            await getContents("q=lion");//Should return two contents
+            await getContents("q=blog");//Should return three contents
         }
 
         window.onload = () => {

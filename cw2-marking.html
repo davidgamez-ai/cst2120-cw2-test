@@ -343,6 +343,10 @@
             await postLogin('user2');
             await deleteFollow('user1');
             await getFeed();//Should not return any posts
+
+            //Follow again - useful so that we can check feed follow information manually
+            await postLogin('user2');
+            await postFollow('user1');
             
             //Search for users
             //MIGHT ONLY WORK WITH TEXT INDEX ON USERS

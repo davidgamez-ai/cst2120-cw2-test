@@ -111,6 +111,9 @@
                     <b>DELETE:</b> <button onclick="deleteFollow('user1')">Unfollow Jane (user1)</button> <button
                         onclick="deleteFollow('user2')">Unfollow John (user2)</button>
                 </p>
+                <p>
+                    <b>Path parameter: <input id="FollowPathParameterInput"><button onclick="postFollow()">POST</button><button onclick="deleteFollow()">DELETE</button></b>
+                </p>
             </div>
 
             <!-- Feed -->
@@ -271,6 +274,25 @@
 
         //Follow specified user
         async function postFollow(user) {
+            //Use path parameter
+            if(!user){
+                //Build URL with path parameter
+                const pathParameter = $('#FollowPathParameterInput').value;
+                const followPath = $('#FollowPath').href + "/" + pathParameter;
+                if(pathParameter === ""){
+                    console.error("Missing path parameter");
+                    return;
+                }
+                console.log('POST ' + followPath);
+                const response = await fetch(followPath, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                console.log(await response.json());
+                return;
+            }
+
+            //No path parameter - data in body
             console.log('POST ' + $('#FollowPath').href)
             const response = await fetch($('#FollowPath').href, {
                 method: 'POST',
@@ -282,6 +304,25 @@
 
         //Unfollows specified user
         async function deleteFollow(user) {
+            //Use path parameter
+            if(!user){
+                //Build URL with path parameter
+                const pathParameter = $('#FollowPathParameterInput').value;
+                if(pathParameter === ""){
+                    console.error("Missing path parameter");
+                    return;
+                }
+                const followPath = $('#FollowPath').href + "/" + pathParameter;
+                console.log('DELETE ' + followPath);
+                const response = await fetch(followPath, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                console.log(await response.json());
+                return;
+            }
+
+            //No path parameter - data in body
             console.log('DELETE ' + $('#FollowPath').href);
             const response = await fetch($('#FollowPath').href, {
                 method: 'DELETE',
